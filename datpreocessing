@@ -1,0 +1,74 @@
+import pandas as pd
+
+data_path = "/content/OnlineRetail.csv"
+df = pd.read_csv(data_path)
+
+# Data Exploration
+print("First few rows of the dataset:")
+print(df.head())
+
+
+print("\nSummary statistics:")
+print(df.describe())
+print("\nMissing values:")
+print(df.isnull().sum())
+df['Description'].fillna(method='ffill', inplace=True)
+df['Quantity'].fillna(method='ffill', inplace=True)
+df['InvoiceDate'].fillna(method='ffill', inplace=True)
+df['UnitPrice'].fillna(method='ffill', inplace=True)
+df['CustomerID'].fillna(method='ffill', inplace=True)
+df['Country'].fillna(method='ffill', inplace=True)
+
+
+
+print("\nUnique values in categorical columns:")
+for col in df.select_dtypes(include='object').columns:
+    print(f"{col}: {df[col].nunique()} unique values")
+print(df.isnull().sum())
+import matplotlib.pyplot as plt
+plt.figure()
+plt.scatter(df.index, df['Quantity'], color='skyblue', edgecolor='black')
+plt.title("Scatter Plot of Quantity")
+plt.xlabel("Index")
+plt.ylabel("Quantity")
+plt.show()
+import numpy as np
+import pandas as pd
+df['Z-Score'] = (df['Quantity'] - df['Quantity'].mean()) / df['Quantity'].std()
+threshold = 3
+outliers_z = df[np.abs(df['Z-Score']) > threshold]
+df_no_outliers_z = df[np.abs(df['Z-Score']) <= threshold]
+df_no_outliers_z = df_no_outliers_z.drop(columns=['Z-Score'])
+print(df_no_outliers_z)
+df['InvoiceDate'] = pd.to_datetime(df['InvoiceDate'], format='%d-%m-%Y %H:%M')
+df['Hour'] = df['InvoiceDate'].dt.hour
+df['TotalSales'] = df['Quantity'] * df['UnitPrice']
+print("\nDataFrame with new features:")
+print(df.head())
+import seaborn as sns
+df['InvoiceDate'] = pd.to_datetime(df['InvoiceDate'], format='%d-%m-%Y %H:%M')
+df['Hour'] = df['InvoiceDate'].dt.hour
+df['TotalSales'] = df['Quantity'] * df['UnitPrice']
+summary_stats = df.describe()
+sales_by_hour = df.groupby('Hour')['TotalSales'].sum().reset_index()
+top_selling_products = df.groupby('Description')['Quantity'].sum().reset_index()
+top_selling_products = top_selling_products.sort_values(by='Quantity', ascending=False).head(10)
+
+
+
+plt.figure(figsize=(12, 6))
+sns.lineplot(data=sales_by_hour, x='Hour', y='TotalSales', marker='o')
+plt.title('Total Sales by Hour of the Day')
+plt.xlabel('Hour of the Day')
+plt.ylabel('Total Sales')
+plt.grid(True)
+plt.show()
+
+
+# Visualization: Top-Selling Products
+plt.figure(figsize=(12, 6))
+sns.barplot(data=top_selling_products, x='Quantity', y='Description', orient='h')
+plt.title('Top-Selling Products by Quantity')
+plt.xlabel('Quantity Sold')
+plt.ylabel('Product Description')
+plt.show()
